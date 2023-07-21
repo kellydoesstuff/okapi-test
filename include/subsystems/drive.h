@@ -11,3 +11,7 @@ namespace pid {
     void stop();
     void drivePID();
 }
+
+namespace auton {
+    void nothing();
+}

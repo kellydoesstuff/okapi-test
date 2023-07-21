@@ -69,11 +69,10 @@ namespace pid {
         int power;
         double derivative;
         double prev_error{0.0};
-        double power;
         int powercap {11000};
 
         int direction {abs(setpoint) / setpoint};
-        int setpoint {abs(setpoint)};
+        setpoint = abs(setpoint);
 
         while (startPID) {
             
@@ -114,5 +113,12 @@ namespace pid {
         timer.clearHardMark();
         timeout_timer.clearHardMark();
         stop();
+    }
+}
+
+namespace auton {
+    
+    void nothing () {
+        pros::lcd::print(0, "nothing");
     }
 }
