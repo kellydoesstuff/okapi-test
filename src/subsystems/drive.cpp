@@ -2,10 +2,11 @@
 #include <iostream>
 
 //initialize motors (this would also be where you initialize motors/sensors for other subsystems)
-Motor LF(-1), LB(-2), RF(3), RB(4);
+Motor LF(-11), LB(-1), RF(20), RB(10);
 
 MotorGroup left({LF,LB});
 MotorGroup right({RF,RB});
+
 
 Timer timer;
 Timer timeout_timer;
@@ -50,29 +51,24 @@ namespace pid {
     }
 
     double avgEncoder() {
-        return (fabs(left.getPosition()) + fabs(right.getPosition()))/2;
+        return (left.getPosition() + right.getPosition())/2;
     }
 
     void stop() {
-        left.moveVoltage(0);
-        right.moveVoltage(0);
+        left.moveVelocity(0);
+        right.moveVelocity(0);
     }
 
     double slew(double target_speed, double step, double prev_speed) {
-        
-        double change{prev_speed-target_speed};
-        change = std::clamp(change, -step, step); // limit change to the range of step
-        return prev_speed + change;
-        
-        // if (target_speed > prev_speed + step){
-        //     prev_speed += step;
-        // } else if (target_speed < prev_speed - step){
-        //     prev_speed -= step;
-        // } else {
-        //     prev_speed = target_speed;
-        // }
+        if (target_speed > prev_speed + step){
+            prev_speed += step;
+        } else if (target_speed < prev_speed - step){
+            prev_speed -= step;
+        } else {
+            prev_speed = target_speed;
+        }
 
-        // return prev_speed;
+        return prev_speed;
     }
 
     void drivePID(int setpoint, double kP, double kI, double kD) {
@@ -91,18 +87,18 @@ namespace pid {
         double power;
         // slew
         double prev_power{0};
-        int step{10};
-        int powercap {11000};
+        int step{50};
+        int powercap {11000}; // max mV is 12,000
+        int count {0};
+        // int direction {abs(setpoint) / setpoint};
+        // setpoint = abs(setpoint);
 
-        int direction {abs(setpoint) / setpoint};
-        setpoint = abs(setpoint);
-
-        while (startPID) {
-            
+        while (abs(error) > 6 || count == 0) {
+            count = 1;
             error = setpoint - avgEncoder();
             derivative = error - prev_error;
             
-            power = (error * kP + derivative * kD) * direction;
+            power = (error * kP + derivative * kD);
             
             if (power >= powercap) {
                 power = powercap;
@@ -111,7 +107,7 @@ namespace pid {
             }
 
             prev_error = error;
-
+            
             power = slew(power,step,prev_power);
             
             left.moveVoltage(power);
@@ -124,28 +120,44 @@ namespace pid {
             pros::lcd::print(2, "power >> %5.2f", power);
 
             // exit conditions...no good needs to be edited
-            if (avgEncoder() > setpoint) { // overshot
-                timer.placeHardMark();
-            }
-            if (timer.getDtFromHardMark() > 0.3_s) {
-                startPID = false;
-            }
-            if (timeout_timer.getDtFromHardMark() > timeout) { // if it stays for too long
-                startPID = false;
-            }
+            // if (abs(derivative) <= 6)
+            //     timer.placeHardMark();
+            // if (avgEncoder() > setpoint) { // overshot
+            //     timer.placeHardMark();
+            // }
+            // if (timer.getDtFromHardMark() > 2_s) {
+            //     startPID = false;
+            // }
+            // if (timeout_timer.getDtFromHardMark() > timeout) { // if it stays for too long
+            //     startPID = false;
+            // }
 
             pros::delay(10);
         }
-
+        pros::lcd::clear();
+        pros::lcd::print(3, "Exited");
         timer.clearHardMark();
         timeout_timer.clearHardMark();
         stop();
+    }
+
+    void drivePID(int setpoint) {
+        drivePID(setpoint, 31.425, 0, 4.9); // default constants
     }
 }
 
 namespace auton {
     
+    // 4 inch wheels, 12.5663706144 per 900 motor ticks (one full rotation of motor)
+    // distance = circumference * gear ratio * rotation
+   
+    double calculate (double x) { // converts inches to degrees
+        double rotations{x/12.57};
+        int degrees {rotations*360};
+        return degrees;
+    }
+    
     void nothing () {
-        pros::lcd::print(0, "nothing");
+        pid::drivePID(calculate(-24.0));
     }
 }

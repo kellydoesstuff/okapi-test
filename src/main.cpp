@@ -10,7 +10,7 @@
  */
 void initialize() {
 	pros::lcd::initialize();
-	selector::init();
+	// selector::init();
 	drive::init();
 }
 
@@ -45,9 +45,9 @@ void competition_initialize() {}
  */
 void autonomous() {
 	 
-	 if (selector::auton == 0) {
-		auton::nothing();
-	 }
+	//  if (selector::auton == 0) {
+	// 	auton::nothing();
+	//  }
 }
 
 /**
@@ -67,13 +67,23 @@ void opcontrol() {
 	// pros::Controller master(pros::E_CONTROLLER_MASTER);
 	// pros::Motor left_mtr(1);
 	// pros::Motor right_mtr(2);
+	// -20, 10, 11, -1
+	Motor LF(-20), LB(10), RF(11), RB(-1);
+
+	// MotorGroup left({LF,LB});
+	// MotorGroup right({RF,RB});
 
 	drive::init();
 
-	while (true) {
+	
 
-		drive::opcontrol();
+	// LF.moveRelative(20,80);
+	auton::nothing();
+
+	// while (true) {
+
+	// 	drive::opcontrol();
 		
-		pros::delay(20);
-	}
+	// 	pros::delay(20);
+	// }
 }
