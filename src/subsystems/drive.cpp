@@ -10,7 +10,7 @@ MotorGroup right({RF,RB});
 Timer timer;
 Timer timeout_timer;
 
-// chassis Ccntroller - lets us drive the robot around with open- or closed-loop control
+// chassis controller - lets us drive the robot around with open- or closed-loop control
 auto chassis = ChassisControllerBuilder()
     .withMotors (
         {-1,-2},
@@ -58,17 +58,40 @@ namespace pid {
         right.moveVoltage(0);
     }
 
-    void drivePID(int setpoint, double kP, double kI, double kD) {
+    double slew(double target_speed, double step, double prev_speed) {
         
+        double change{prev_speed-target_speed};
+        change = std::clamp(change, -step, step); // limit change to the range of step
+        return prev_speed + change;
+        
+        // if (target_speed > prev_speed + step){
+        //     prev_speed += step;
+        // } else if (target_speed < prev_speed - step){
+        //     prev_speed -= step;
+        // } else {
+        //     prev_speed = target_speed;
+        // }
+
+        // return prev_speed;
+    }
+
+    void drivePID(int setpoint, double kP, double kI, double kD) {
+
+        resetEncoders();
+        
+        // timer stuff
         timeout_timer.placeHardMark(); //record when function was called
         QTime timeout {5_s}; // variable with the type QTime, represents the amount of time needed for loop to break
-        resetEncoders();
+
+        // variables
         bool startPID {true};
-        
         double error;
-        int power;
         double derivative;
         double prev_error{0.0};
+        double power;
+        // slew
+        double prev_power{0};
+        int step{10};
         int powercap {11000};
 
         int direction {abs(setpoint) / setpoint};
@@ -81,22 +104,26 @@ namespace pid {
             
             power = (error * kP + derivative * kD) * direction;
             
-            if (direction * power >= powercap) {
+            if (power >= powercap) {
                 power = powercap;
-            } else if (direction * power <= -powercap) {
+            } else if (power <= -powercap) {
                 power = -powercap;
             }
 
             prev_error = error;
 
+            power = slew(power,step,prev_power);
+            
+            left.moveVoltage(power);
+            right.moveVoltage(power);
+
+            prev_power = power;
+
             pros::lcd::print(0, "encoder value >> %5.2f", avgEncoder());
             pros::lcd::print(1, "error >> %5.2f", error);
             pros::lcd::print(2, "power >> %5.2f", power);
 
-            left.moveVoltage(power);
-            right.moveVoltage(power);
-
-            // exit conditions
+            // exit conditions...no good needs to be edited
             if (avgEncoder() > setpoint) { // overshot
                 timer.placeHardMark();
             }
