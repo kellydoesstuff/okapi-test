@@ -44,7 +44,10 @@ void competition_initialize() {}
  * from where it left off.
  */
 void autonomous() {
-	 
+	// positive numbers = red alliance
+	// negative numbers = blue alliance
+	// 0 = skills
+	
 	//  if (selector::auton == 0) {
 	// 	auton::nothing();
 	//  }
@@ -70,14 +73,8 @@ void opcontrol() {
 	// -20, 10, 11, -1
 	Motor LF(-20), LB(10), RF(11), RB(-1);
 
-	// MotorGroup left({LF,LB});
-	// MotorGroup right({RF,RB});
-
 	drive::init();
 
-	
-
-	// LF.moveRelative(20,80);
 	auton::nothing();
 
 	// while (true) {

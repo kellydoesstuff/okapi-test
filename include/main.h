@@ -78,6 +78,8 @@ void opcontrol(void);
 //#include <iostream>
 
 #include "subsystems/drive.h"
+#include "subsystems/pid.h"
+#include "subsystems/auton.h"
 
 
 #endif
