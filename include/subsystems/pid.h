@@ -6,7 +6,7 @@ namespace pid {
     double avgEncoder();
     void stop();
     double slew(double target_speed, double step, double prev_speed);
-    void drivePID(int setpoint, double kP, double kI, double kD);
-    void drivePID(int setpoint);
-    void drivePID(int setpoint, int step);
+    void drivePD(int setpoint, int step, double kP, double kD);
+    void drivePD(int setpoint);
+    void drivePD(int setpoint, int step);
 }

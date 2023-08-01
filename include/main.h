@@ -81,7 +81,6 @@ void opcontrol(void);
 #include "subsystems/pid.h"
 #include "subsystems/auton.h"
 
-
 #endif
 
 #endif  // _PROS_MAIN_H_

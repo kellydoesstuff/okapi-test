@@ -12,7 +12,7 @@ namespace auton {
     }
     
     void nothing () {
-        pid::drivePID(calculate(-24.0));
+        pid::drivePD(calculate(24.0));
     }
 
 }
