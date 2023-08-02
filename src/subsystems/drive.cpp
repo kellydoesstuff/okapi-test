@@ -37,4 +37,14 @@ namespace drive {
                                   master.getAnalog(ControllerAnalog::leftX));
     }
 
+    void stop() {
+        left.moveVelocity(0);
+        right.moveVelocity(0);
+    }
+
+    void drivemV(double power) {
+        left.moveVoltage(power);
+        right.moveVoltage(power);
+    }
+
 }

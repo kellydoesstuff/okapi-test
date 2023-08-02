@@ -3,8 +3,6 @@ This is the start of my exploration with PROS. When I first started this project
 
 ---
 # To-dos
-- Tune slew again
-- Test exit conditions
 - Create another branch for if we have an inertial sensor
     - Angular PD
     - Heading correction

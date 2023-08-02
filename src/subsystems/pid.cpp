@@ -34,12 +34,6 @@ namespace pid {
         return (left.getPosition() + right.getPosition())/2;
     }
 
-    void stop() {
-        left.moveVelocity(0);
-        right.moveVelocity(0);
-    }
-
-
     //--EVERYTHING POSITIONAL PD--//
 
     double slew(double target_speed, double step, double prev_speed) {
@@ -53,6 +47,12 @@ namespace pid {
         }
         
         return prev_speed;
+    }
+
+    double calculatePD(double kP, double kD, double prev_error, double setpoint, double encoders) {
+       double error{setpoint-encoders};
+       double derivative{error-prev_error};
+       return (error * kP + derivative * kD);
     }
 
     void drivePD(int setpoint, int step, double kP, double kD) {
@@ -75,25 +75,26 @@ namespace pid {
         int big_error{10};
 
         while (startPID) {
-            error = setpoint - avgEncoder();
-            derivative = error - prev_error;
+            // error = setpoint - avgEncoder();
+            // derivative = error - prev_error;
             
-            power = (error * kP + derivative * kD);
-            
-            if (power >= powercap) {
-                power = powercap;
-            } else if (power <= -powercap) {
-                power = -powercap;
-            }
+            power = calculatePD(kP, kD, error, prev_error, setpoint, avgEncoder());
 
             prev_error = error;
             
+            // if (power >= powercap) {
+            //     power = powercap;
+            // } else if (power <= -powercap) {
+            //     power = -powercap;
+            // }
+
+            power = util::clip_num(power, powercap, -powercap);
+
             power = slew(power,step,prev_power);
-            
-            left.moveVoltage(power);
-            right.moveVoltage(power);
 
             prev_power = power;
+            
+            drive::drivemV(power);
 
             // debug stuff
             pros::lcd::print(0, "encoder value >> %5.2f", avgEncoder());
@@ -133,7 +134,7 @@ namespace pid {
         pros::lcd::clear();
         pros::lcd::print(3, "Exited");
         resetTimers();
-        stop();
+        drive::stop();
     }
 
     void drivePD(int setpoint) {

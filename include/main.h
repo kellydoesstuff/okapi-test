@@ -80,6 +80,7 @@ void opcontrol(void);
 #include "subsystems/drive.h"
 #include "subsystems/pid.h"
 #include "subsystems/auton.h"
+#include "subsystems/util.h"
 
 #endif
 
