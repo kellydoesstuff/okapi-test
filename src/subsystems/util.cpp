@@ -10,5 +10,5 @@ namespace util {
     return input;
   }
   
-  const int DELAY_TIME{10};
+  const int DELAY_TIME{10}; // in ms
 }
