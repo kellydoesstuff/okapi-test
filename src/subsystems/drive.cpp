@@ -27,6 +27,11 @@ namespace drive {
         LB.setBrakeMode(AbstractMotor::brakeMode::coast);
         RF.setBrakeMode(AbstractMotor::brakeMode::coast);
         RB.setBrakeMode(AbstractMotor::brakeMode::coast);
+       
+        left.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
+        right.setEncoderUnits(AbstractMotor::encoderUnits::degrees);
+
+        pid::resetEncoders();
     }
 
     void opcontrol() {

@@ -1,10 +1,9 @@
 #include "main.h"
 #include <iostream>
 
-Timer small_exit_time;
-Timer big_exit_time;
-Timer velocity_time;
-
+int small_exit_time{0};
+int big_exit_time{0};
+int velocity_time{0};
 
 /*----NOTE----
 Everything PID is written in mV, not voltage cause I got syntax messed up lol (why kP is so outrageously high).
@@ -25,9 +24,9 @@ namespace pid {
     }
 
     void resetTimers() {
-        small_exit_time.clearHardMark();
-        big_exit_time.clearHardMark();
-        velocity_time.clearHardMark();
+        big_exit_time = 0;
+        small_exit_time = 0;
+        velocity_time = 0;
     }
 
     double avgEncoder() {
@@ -104,9 +103,9 @@ namespace pid {
             // exit conditions
             // if robot gets close to target with a acceptable error range, make sure it's there for a short amnt of time
             if (abs(error) < small_error) {
-                small_exit_time.placeHardMark();
-                big_exit_time.clearHardMark();
-                if (small_exit_time.getDtFromHardMark() > 1_s) {
+                small_exit_time += util::DELAY_TIME;
+                big_exit_time = 0;
+                if (small_exit_time > 1000) {
                     pros::lcd::print(3, "in small error");
                     startPID = false;
                 }
@@ -115,16 +114,16 @@ namespace pid {
             // if robot is close to target, start timer. if robot doesn't get closer within certian time, exit. 
             // doesn't run while small exit runs
             if (abs(error) < big_error) {
-                big_exit_time.placeHardMark();
-                if (big_exit_time.getDtFromHardMark() > 1.2_s) {
+                big_exit_time += util::DELAY_TIME;
+                if (big_exit_time > 1200) {
                     startPID = false;
                 }
             }
 
             // if motor velocity is 0, exit
             if (abs(derivative) <= 0.05) {
-                velocity_time.placeHardMark();
-                if (velocity_time.getDtFromHardMark() > 1_s) {
+                velocity_time += util::DELAY_TIME;
+                if (velocity_time > 1000) {
                     startPID = false;
                 }
             }

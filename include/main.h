@@ -77,10 +77,10 @@ void opcontrol(void);
  */
 //#include <iostream>
 
-#include "subsystems/drive.h"
-#include "subsystems/pid.h"
-#include "subsystems/auton.h"
-#include "subsystems/util.h"
+#include "subsystems/drive.hpp"
+#include "subsystems/pid.hpp"
+#include "subsystems/auton.hpp"
+#include "subsystems/util.hpp"
 
 #endif
 
