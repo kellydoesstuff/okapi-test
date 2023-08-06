@@ -10,5 +10,11 @@ namespace util {
     return input;
   }
   
-  const int DELAY_TIME{10}; // in ms
+  int sign(double input) {
+    if (input > 0)
+      return 1;
+    else if (input < 0)
+      return -1;
+    return 0;
+  }
 }

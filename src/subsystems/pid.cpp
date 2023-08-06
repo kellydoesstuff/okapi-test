@@ -1,11 +1,10 @@
 #include "main.h"
 #include <iostream>
 
-struct {
-    int small_exit_time{0};
-    int big_exit_time{0};
-    int velocity_time{0};
-} timer;
+int small_exit_time{0};
+int big_exit_time{0};
+int velocity_time{0};
+
 
 /*----NOTE----
 Everything PID is written in mV, not voltage cause I got syntax messed up lol (why kP is so outrageously high).
@@ -26,9 +25,9 @@ namespace pid {
     }
 
     void resetTimers() {
-        timer.big_exit_time = 0;
-        timer.small_exit_time = 0;
-        timer.velocity_time = 0;
+        big_exit_time = 0;
+        small_exit_time = 0;
+        velocity_time = 0;
     }
 
     double avgEncoder() {
@@ -50,9 +49,22 @@ namespace pid {
         return prev_speed;
     }
 
-    double calculatePD(double kP, double kD, double prev_error, double setpoint, double encoders) {
+    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double prev_error, double setpoint, double encoders) {
        double error{setpoint-encoders};
        double derivative{error-prev_error};
+       
+       if (kI != 0) { // if kI is active
+        
+        if (fabs(error) < start_i)  // add integral when in range of start_i
+            *integral += error;
+
+        if (util::sgn(error) != util::sgn(prev_error))  // prevent integral windup
+            *integral = 0;
+        
+        return (error * kP + derivative * kD + *integral * kI);
+       
+       }
+       
        return (error * kP + derivative * kD);
     }
 
@@ -76,18 +88,10 @@ namespace pid {
         int big_error{10};
 
         while (startPID) {
-            // error = setpoint - avgEncoder();
-            // derivative = error - prev_error;
             
-            power = calculatePD(kP, kD, error, prev_error, setpoint, avgEncoder());
+            power = calculatePID(kP, 0, kD, 0, 0, prev_error, setpoint, avgEncoder());
 
             prev_error = error;
-            
-            // if (power >= powercap) {
-            //     power = powercap;
-            // } else if (power <= -powercap) {
-            //     power = -powercap;
-            // }
 
             power = util::clip_num(power, powercap, -powercap);
 
@@ -105,9 +109,9 @@ namespace pid {
             // exit conditions
             // if robot gets close to target with a acceptable error range, make sure it's there for a short amnt of time
             if (abs(error) < small_error) {
-                timer.small_exit_time += util::DELAY_TIME;
-                timer.big_exit_time = 0;
-                if (timer.small_exit_time > 1000) {
+                small_exit_time += util::DELAY_TIME;
+               big_exit_time = 0;
+                if (small_exit_time > 1000) {
                     pros::lcd::print(3, "in small error");
                     startPID = false;
                 }
@@ -116,16 +120,16 @@ namespace pid {
             // if robot is close to target, start timer. if robot doesn't get closer within certian time, exit. 
             // doesn't run while small exit runs
             if (abs(error) < big_error) {
-                timer.big_exit_time += util::DELAY_TIME;
-                if (timer.big_exit_time > 1200) {
+                big_exit_time += util::DELAY_TIME;
+                if (big_exit_time > 1200) {
                     startPID = false;
                 }
             }
 
             // if motor velocity is 0, exit
             if (abs(derivative) <= 0.05) {
-                timer.velocity_time += util::DELAY_TIME;
-                if (timer.velocity_time > 1000) {
+                velocity_time += util::DELAY_TIME;
+                if (velocity_time > 1000) {
                     startPID = false;
                 }
             }

@@ -2,5 +2,6 @@
 
 namespace util {
     double clip_num(double input, double max, double min);
-    const int DELAY_TIME; // in ms
+    int sgn(double input);
+    const int DELAY_TIME{10};
 }
