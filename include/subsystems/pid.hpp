@@ -1,10 +1,5 @@
 #include "main.h"
 
-struct {
-    int small_exit_time;
-    int big_exit_time;
-    int velocity_time;
-} timer;
 
 namespace pid {
     void resetEncoders();

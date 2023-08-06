@@ -17,6 +17,4 @@ namespace util {
       return -1;
     return 0;
   }
-
-  const int DELAY_TIME{10};
 }
