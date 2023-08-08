@@ -10,7 +10,7 @@ namespace util {
     return input;
   }
   
-  int sign(double input) {
+  int sgn(double input) {
     if (input > 0)
       return 1;
     else if (input < 0)

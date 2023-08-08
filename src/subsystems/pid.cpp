@@ -68,9 +68,7 @@ namespace pid {
         return prev_speed;
     }
 
-    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double error, double prev_error) {
-       double derivative{error-prev_error};
-       
+    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double derivative, double error, double prev_error) {
        if (kI != 0) { // if kI is active
         
         if (fabs(error) < start_i)  // add integral when in range of start_i
@@ -105,11 +103,11 @@ namespace pid {
         double heading_kP{1};
         double heading_kI{1};
         double heading_kD{1};
-        int og_heading{inertial.get()};
-        int heading_prev_error{0};
-        int current_heading;
-        int heading_error;
-        int heading_power;
+        double og_heading{inertial.get()};
+        double heading_error;
+        double heading_prev_error{0};
+        double heading_derivative;
+        double heading_power;
         
         // exit conditions
         int small_error{5};
@@ -119,7 +117,8 @@ namespace pid {
             
             // drive pd
             error = setpoint - avgEncoder();
-            power = calculatePID(kP, 0, kD, 0, 0, error, prev_error);
+            derivative = error - prev_error;
+            power = calculatePID(kP, 0, kD, 0, 0, derivative, error, prev_error);
             prev_error = error;
             power = util::clip_num(power, powercap, -powercap);
             power = slew(power, step, prev_power);
@@ -127,7 +126,8 @@ namespace pid {
             
             // heading correction
             heading_error = og_heading - inertial.get();
-            heading_power = calculatePID(heading_kP, heading_kI, heading_kD, 15.0, &integral, heading_error, heading_prev_error);
+            heading_derivative = error - prev_error;
+            heading_power = calculatePID(heading_kP, heading_kI, heading_kD, 15.0, &integral, heading_derivative, heading_error, heading_prev_error);
             drive::drivemV(power-heading_power, power+heading_power);
 
             // debug stuff
