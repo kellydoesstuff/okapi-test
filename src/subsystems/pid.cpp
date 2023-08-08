@@ -49,9 +49,7 @@ namespace pid {
         return prev_speed;
     }
 
-    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double prev_error, double setpoint, double encoders) {
-       double error{setpoint-encoders};
-       double derivative{error-prev_error};
+    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double derivative, double error, double prev_error) {
        
        if (kI != 0) { // if kI is active
         
@@ -75,10 +73,10 @@ namespace pid {
         // variables
         bool startPID {true};
         double error;
-        double derivative;
         double prev_error{0.0};
         double power;
-        
+        double derivative;
+
         // slew
         double prev_power{0};
         int powercap {11000}; // max mV is 12,000
@@ -89,16 +87,13 @@ namespace pid {
 
         while (startPID) {
             
-            power = calculatePID(kP, 0, kD, 0, 0, prev_error, setpoint, avgEncoder());
-
+            error = setpoint - avgEncoder();
+            derivative = error - prev_error;
+            power = calculatePID(kP, 0, kD, 0, 0, derivative, error, prev_error);
             prev_error = error;
-
             power = util::clip_num(power, powercap, -powercap);
-
-            power = slew(power,step,prev_power);
-
+            power = slew(power, step, prev_power);
             prev_power = power;
-            
             drive::drivemV(power);
 
             // debug stuff
