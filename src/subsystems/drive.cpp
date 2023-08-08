@@ -7,6 +7,8 @@ Motor LF(-11), LB(-1), RF(20), RB(10);
 MotorGroup left({LF,LB});
 MotorGroup right({RF,RB});
 
+IMU inertial (5);
+
 // chassis controller - lets us drive the robot around with open- or closed-loop control
 auto chassis = ChassisControllerBuilder()
     .withMotors (
@@ -50,6 +52,11 @@ namespace drive {
     void drivemV(double power) {
         left.moveVoltage(power);
         right.moveVoltage(power);
+    }
+    
+    void drivemV(double left_power, double right_power) {
+        left.moveVoltage(left_power);
+        right.moveVoltage(right_power);
     }
 
 }

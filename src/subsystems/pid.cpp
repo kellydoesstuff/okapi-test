@@ -4,6 +4,7 @@
 int small_exit_time{0};
 int big_exit_time{0};
 int velocity_time{0};
+double integral{0};
 
 
 /*----NOTE----
@@ -18,6 +19,24 @@ namespace pid {
 
     MotorGroup left({LF,LB});
     MotorGroup right({RF,RB});
+
+    IMU inertial (5);
+
+    void calibrateInertial() {
+        int err = inertial.reset();
+        pros::lcd::print(0, "inertial calibrate : reset (done) error: %d", err);
+        int n {0};
+        
+        while (inertial.isCalibrating()) {
+            pros::lcd::print(0, "inertial calibrate : is calibrating : %d", n+=10);
+
+            pros::delay(20);
+        }
+
+        pros::lcd::print(0, "inertial calibrate : is calibrating (done)  ");
+
+        pros::delay(500);
+    }
     
     void resetEncoders () {
         left.tarePosition();
@@ -49,8 +68,7 @@ namespace pid {
         return prev_speed;
     }
 
-    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double prev_error, double setpoint, double encoders) {
-       double error{setpoint-encoders};
+    double calculatePID(double kP, double kI,  double kD, double start_i, double* integral, double error, double prev_error) {
        double derivative{error-prev_error};
        
        if (kI != 0) { // if kI is active
@@ -83,23 +101,34 @@ namespace pid {
         double prev_power{0};
         int powercap {11000}; // max mV is 12,000
 
+        // heading correction
+        double heading_kP{1};
+        double heading_kI{1};
+        double heading_kD{1};
+        int og_heading{inertial.get()};
+        int heading_prev_error{0};
+        int current_heading;
+        int heading_error;
+        int heading_power;
+        
         // exit conditions
         int small_error{5};
         int big_error{10};
 
         while (startPID) {
             
-            power = calculatePID(kP, 0, kD, 0, 0, prev_error, setpoint, avgEncoder());
-
+            // drive pd
+            error = setpoint - avgEncoder();
+            power = calculatePID(kP, 0, kD, 0, 0, error, prev_error);
             prev_error = error;
-
             power = util::clip_num(power, powercap, -powercap);
-
-            power = slew(power,step,prev_power);
-
+            power = slew(power, step, prev_power);
             prev_power = power;
             
-            drive::drivemV(power);
+            // heading correction
+            heading_error = og_heading - inertial.get();
+            heading_power = calculatePID(heading_kP, heading_kI, heading_kD, 15.0, &integral, heading_error, heading_prev_error);
+            drive::drivemV(power-heading_power, power+heading_power);
 
             // debug stuff
             pros::lcd::print(0, "encoder value >> %5.2f", avgEncoder());
