@@ -59,4 +59,9 @@ namespace drive {
         right.moveVoltage(right_power);
     }
 
+    void turn(double power) {
+        left.moveVoltage(power);
+        right.moveVoltage(-power);
+    }
+
 }

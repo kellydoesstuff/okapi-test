@@ -20,14 +20,14 @@ namespace pid {
     MotorGroup left({LF,LB});
     MotorGroup right({RF,RB});
 
-    IMU inertial (5);
+    pros::Imu inertial(5);
 
     void calibrateInertial() {
         int err = inertial.reset();
         pros::lcd::print(0, "inertial calibrate : reset (done) error: %d", err);
         int n {0};
         
-        while (inertial.isCalibrating()) {
+        while (inertial.is_calibrating()) {
             pros::lcd::print(0, "inertial calibrate : is calibrating : %d", n+=10);
 
             pros::delay(20);
@@ -103,11 +103,12 @@ namespace pid {
         double heading_kP{1};
         double heading_kI{1};
         double heading_kD{1};
-        double og_heading{inertial.get()};
+        double og_heading{inertial.get_heading()};
         double heading_error;
         double heading_prev_error{0};
         double heading_derivative;
         double heading_power;
+
         
         // exit conditions
         int small_error{5};
@@ -125,10 +126,13 @@ namespace pid {
             prev_power = power;
             
             // heading correction
-            heading_error = og_heading - inertial.get();
-            heading_derivative = error - prev_error;
+            heading_error = og_heading - inertial.get_heading();
+            heading_derivative = heading_error - heading_prev_error;
             heading_power = calculatePID(heading_kP, heading_kI, heading_kD, 15.0, &integral, heading_derivative, heading_error, heading_prev_error);
+            heading_prev_error = heading_error;
+
             drive::drivemV(power-heading_power, power+heading_power);
+            
 
             // debug stuff
             pros::lcd::print(0, "encoder value >> %5.2f", avgEncoder());
@@ -139,7 +143,7 @@ namespace pid {
             // if robot gets close to target with a acceptable error range, make sure it's there for a short amnt of time
             if (abs(error) < small_error) {
                 small_exit_time += util::DELAY_TIME;
-               big_exit_time = 0;
+                big_exit_time = 0;
                 if (small_exit_time > 1000) {
                     pros::lcd::print(3, "in small error");
                     startPID = false;
@@ -178,5 +182,51 @@ namespace pid {
     void drivePD(int setpoint, int step) {
         drivePD(setpoint, step, 31.425, 4.9); // default constants w/ custom step
     } 
+
+    //--EVERYTHING ANGULAR PD--//
+    void angularPD(double setpoint, double kP, double kD) {
+        
+        // note: clockwise rotation --> positive deg, counter-clockwise --> negative deg
+        // this is also not relative turning, as inertial is not reset after each run, but absolute.
+        // angularPD(90) will do the same thing every single time.
+        
+        if (setpoint > 180) {
+                setpoint = setpoint - 360;
+        } else if (setpoint < -180) {
+            setpoint = setpoint + 360;
+        }
+
+        // variables
+        bool startPD {true};
+        double error;
+        double derivative;
+        double prev_error{0.0};
+        double power;
+        int powercap {11000};
+
+        // exit conditions
+        int small_exit {7};
+
+        while (startPD) {
+            error = setpoint - inertial.get_heading();
+            derivative = error - prev_error;
+            power = calculatePID(kP, 0, kD, 0, 0, derivative, error, prev_error);
+            power = util::clip_num(power, powercap, -powercap);
+            prev_error = error;
+
+            drive::turn(power);
+
+            // if error and derivative are smalll for 200ms, exit
+            if (abs(error) < small_exit && abs(derivative) <= 0.05) {
+                small_exit_time += util::DELAY_TIME;
+                velocity_time += util::DELAY_TIME;
+                if (small_exit_time > 2000 && velocity_time > 2000) {
+                    startPD = false;
+                }
+            } 
+
+            pros::delay(10);
+        }
+    }
 
 }

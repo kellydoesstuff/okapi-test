@@ -11,4 +11,5 @@ namespace pid {
     void drivePD(int setpoint, int step, double kP, double kD);
     void drivePD(int setpoint);
     void drivePD(int setpoint, int step);
+    void angularPD(double setpoint, double kP, double kD);
 }
