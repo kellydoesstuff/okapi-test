@@ -52,4 +52,14 @@ namespace drive {
         right.moveVoltage(power);
     }
 
+    void drivemV(double left_power, double right_power) {
+        left.moveVoltage(left_power);
+        right.moveVoltage(right_power);
+    }
+
+    void turn(double power) {
+        left.moveVoltage(power);
+        right.moveVoltage(-power);
+    }
+    
 }
