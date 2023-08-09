@@ -220,13 +220,17 @@ namespace pid {
             if (abs(error) < small_exit && abs(derivative) <= 0.05) {
                 small_exit_time += util::DELAY_TIME;
                 velocity_time += util::DELAY_TIME;
-                if (small_exit_time > 2000 && velocity_time > 2000) {
+                if (small_exit_time > 200 && velocity_time > 200) {
                     startPD = false;
                 }
             } 
 
             pros::delay(10);
         }
+    }
+
+    void angularPD(double setpoint) { // default constants
+        angularPD(setpoint, 0.0, 0.0);
     }
 
 }
