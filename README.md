@@ -3,8 +3,8 @@ This is the start of my exploration with PROS. When I first started this project
 
 ---
 # To-dos
-- Create another branch for if we have an inertial sensor
-    - Angular PD
-    - Heading correction
+- ~Create another branch for if we have an inertial sensor~
+    - ~Angular PD~
+    - ~Heading correction~
 - Create an overheating warning (?)
 - Create PID with OOP (?)
