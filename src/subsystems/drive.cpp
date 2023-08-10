@@ -7,7 +7,6 @@ Motor LF(-11), LB(-1), RF(20), RB(10);
 MotorGroup left({LF,LB});
 MotorGroup right({RF,RB});
 
-IMU inertial (5);
 
 // chassis controller - lets us drive the robot around with open- or closed-loop control
 auto chassis = ChassisControllerBuilder()

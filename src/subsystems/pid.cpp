@@ -28,7 +28,7 @@ namespace pid {
         int n {0};
         
         while (inertial.is_calibrating()) {
-            pros::lcd::print(0, "inertial calibrate : is calibrating : %d", n+=10);
+            pros::lcd::print(0, "inertial calibrate : is calibrating : %d", n+=20);
 
             pros::delay(20);
         }
