@@ -227,6 +227,10 @@ namespace pid {
 
             pros::delay(10);
         }
+        pros::lcd::clear();
+        pros::lcd::print(3, "Exited");
+        resetTimers();
+        drive::stop();
     }
 
     void angularPD(double setpoint) { // default constants
